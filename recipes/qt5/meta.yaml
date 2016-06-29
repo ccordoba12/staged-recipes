@@ -46,6 +46,9 @@ source:
     # See https://bugreports.qt.io/browse/QTBUG-48298
     - v4l2.patch  # [linux]
 
+    # Change qt.conf name to avoid clashes with Qt4
+    - qt5_conf.patch
+
 build:
   number: 0
   detect_binary_files_with_prefix: true  # [unix]

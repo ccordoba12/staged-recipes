@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Main variables
-# --------------
-BIN=$PREFIX/lib/qt5/bin
-QTCONF=$BIN/qt.conf
-
 
 # Compile
 # -------
@@ -61,12 +56,20 @@ if [ `uname` == Darwin ]; then
         unset $x
     done
 
+    # Executable file names
+    EXEC_FILES=( Assistant.app Designer.app Linguist.app fixqt4headers.pl \
+    lconvert lrelease lupdate macchangeqt macdeployqt moc pixeltool.app \
+    qcollectiongenerator qdoc qhelpconverter qhelpgenerator qlalr qmake \
+    qml.app qmleasing qmlimportscanner qmllint qmlmin qmlplugindump \
+    qmlprofiler qmlscene qmltestrunner qtdiag qtpaths qtplugininfo \
+    rcc syncqt.pl uic xmlpatterns xmlpatternsvalidator )
+
     MACOSX_DEPLOYMENT_TARGET=10.7
     MAKE_JOBS=$(sysctl -n hw.ncpu)
 
     ./configure -prefix $PREFIX \
                 -libdir $PREFIX/lib \
-                -bindir $PREFIX/lib/qt5/bin \
+                -bindir $PREFIX/bin \
                 -headerdir $PREFIX/include/qt5 \
                 -archdatadir $PREFIX/lib/qt5 \
                 -datadir $PREFIX/share/qt5 \
@@ -113,14 +116,21 @@ fi
 # Post build setup
 # ----------------
 
-# Make symlinks of binaries in $BIN to $PREFIX/bin
-for file in $BIN/*
+# Rename executables to avoid clashes with Qt5
+BIN=$PREFIX/bin
+for file in "${EXEC_FILES[@]}"
 do
-    ln -sfv ../lib/qt5/bin/$(basename $file) $PREFIX/bin/$(basename $file)-qt5
+    if [[ $file == *.app ]]; then
+        mv $BIN/$file $BIN/${file%.app}-qt5.app
+    elif [[ $file == *.pl ]]; then
+        mv $BIN/$file $BIN/${file%.pl}-qt5.pl
+    else
+        mv $BIN/$file $BIN/$file-qt5
+    fi
 done
 
 # Remove static libs
 rm -rf $PREFIX/lib/*.a
 
 # Add qt.conf file to the package to make it fully relocatable
-cp $RECIPE_DIR/qt.conf $BIN/
+cp $RECIPE_DIR/qt.conf $BIN/qt5.conf
